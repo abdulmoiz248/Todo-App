@@ -1,0 +1,20 @@
+[
+    {
+        "task_id": "1",
+        "task_name": "walk",
+        "description": "walk in the morning",
+        "status": "pending"
+    },
+    {
+        "task_id": "2",
+        "task_name": "devops code",
+        "description": "write devops code tomorrow",
+        "status": "completed"
+    },
+    {
+        "task_id": "3",
+        "task_name": "lab",
+        "description": "complete the lab today",
+        "status": "pending"
+    }
+]
