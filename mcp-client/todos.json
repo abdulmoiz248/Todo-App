@@ -1,0 +1,20 @@
+[
+    {
+        "task_id": "1",
+        "task_name": "Lunch today",
+        "description": "Have lunch at 1 PM today",
+        "status": "pending"
+    },
+    {
+        "task_id": "2",
+        "task_name": "Prepare HCI Assignment",
+        "description": "Prepare HCI assignment",
+        "status": "done"
+    },
+    {
+        "task_id": "3",
+        "task_name": "Meet Sarmad",
+        "description": "Meet Sarmad at 10 am",
+        "status": "pending"
+    }
+]
