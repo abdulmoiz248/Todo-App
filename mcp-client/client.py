@@ -45,14 +45,15 @@ class MCPClient:
 
         response = await self.session.list_tools()
         tools = response.tools
-        print("\n✅ Connected to MCP server with tools:", [tool.name for tool in tools])
+
         
         # Debug: print raw tool info (commented out for cleaner output)
-        # for tool in tools:
-        #     print(f"DEBUG: Raw tool {tool.name}:")
-        #     print(f"  - inputSchema: {tool.inputSchema}")
-        #     print(f"  - description: {tool.description}")
-        
+        for tool in tools:
+            print("-"*20)
+            print(f"Raw tool {tool.name}:")
+            print(f"  - inputSchema: {tool.inputSchema}")
+            print(f"  - description: {tool.description}")
+        print("-"*20)
         self.tools = tools
 
         # convert to Groq function-calling schema immediately
@@ -87,12 +88,7 @@ class MCPClient:
             }
             groq_tools.append(groq_tool)
             
-            # Debug: print tool schema
-            if tool.name == "get_todos":
-                print(f"DEBUG: get_todos parameters: {json.dumps(parameters, indent=2)}")
-                print(f"DEBUG: get_todos full tool: {json.dumps(groq_tool, indent=2)}")
-            else:
-                print(f"DEBUG: Converted tool {tool.name}: {json.dumps(groq_tool, indent=2)}")
+
             
         self.tools = groq_tools
 
@@ -118,10 +114,8 @@ class MCPClient:
 
         self.conversation.append({"role": "user", "content": query})
 
-        # Debug: print tools being sent to Groq
-        print(f"DEBUG: Sending {len(self.tools)} tools to Groq")
-        for tool in self.tools:
-            print(f"  - {tool['function']['name']}")
+
+
 
         response = self.groq.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -133,32 +127,24 @@ class MCPClient:
         if response.choices:
             msg = response.choices[0].message
             
-            # Debug: print what Groq returned
-            print(f"DEBUG: Groq response message: {msg}")
-            print(f"DEBUG: Has tool_calls: {hasattr(msg, 'tool_calls')}")
-            if hasattr(msg, "tool_calls"):
-                print(f"DEBUG: Tool calls: {msg.tool_calls}")
 
             if hasattr(msg, "tool_calls") and msg.tool_calls:
-                print(f"DEBUG: Processing {len(msg.tool_calls)} tool calls")
                 for tc in msg.tool_calls:
                     tool_name = tc.function.name
-                    print(f"DEBUG: Calling tool {tool_name} with arguments: {tc.function.arguments}")
+                    print(f"Calling tool {tool_name} with arguments: {tc.function.arguments}")
                     try:
                         tool_args = json.loads(tc.function.arguments)
                     except Exception as e:
-                        print(f"DEBUG: Error parsing tool arguments: {e}")
                         tool_args = {}
                     try:
-                        print(f"DEBUG: Calling MCP tool {tool_name} with args {tool_args}")
+
                         result = await self.session.call_tool(tool_name, tool_args)
-                        print(f"DEBUG: MCP tool result: {result}")
+
                         tool_output = "".join(
                             [part.text for part in getattr(result, "content", []) if hasattr(part, "text")]
                         )
-                        print(f"DEBUG: Tool output: {tool_output}")
+
                     except Exception as e:
-                        print(f"DEBUG: Error calling tool {tool_name}: {e}")
                         tool_output = f"Error calling tool {tool_name}: {e}"
 
                     self.conversation.append({
@@ -167,18 +153,17 @@ class MCPClient:
                         "content": tool_output
                     })
 
-                print(f"DEBUG: Making follow-up request to Groq...")
+
                 followup = self.groq.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=self.conversation
                     # Don't include tools in follow-up to avoid infinite tool calls
                 )
-                print(f"DEBUG: Follow-up response: {followup.choices[0].message if followup.choices else 'No choices'}")
+                # print(f"DEBUG: Follow-up response: {followup.choices[0].message if followup.choices else 'No choices'}")
                 if followup.choices and followup.choices[0].message.content:
                     full_text = followup.choices[0].message.content.strip()
-                    print(f"DEBUG: Follow-up text: {full_text}")
-                else:
-                    print("DEBUG: No follow-up content generated")
+                
+                   
             else:
                 if msg.content:
                     full_text = msg.content.strip()
